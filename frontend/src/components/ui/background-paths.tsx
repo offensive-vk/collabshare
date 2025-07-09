@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from 'react-router-dom';
 
 function FloatingPaths({ position }: { position: number }) {
     const paths = Array.from({ length: 36 }, (_, i) => ({
@@ -24,7 +25,7 @@ function FloatingPaths({ position }: { position: number }) {
                 viewBox="0 0 696 316"
                 fill="none"
             >
-                <title>Background Paths</title>
+                <title>Background Animation</title>
                 {paths.map((path) => (
                     <motion.path
                         key={path.id}
@@ -52,10 +53,13 @@ function FloatingPaths({ position }: { position: number }) {
 
 export function BackgroundPaths({
     title = "Background Paths",
+    text = "Get Started"
 }: {
     title?: string;
+    text?: string;
 }) {
     const words = title.split(" ");
+    const navigate = useNavigate();
 
     return (
         <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-white dark:bg-neutral-950">
@@ -107,15 +111,16 @@ export function BackgroundPaths({
                         overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
                     >
                         <Button
+                            onClick={() => navigate('/room')}
                             variant="ghost"
                             className="rounded-[1.15rem] px-8 py-6 text-lg font-semibold backdrop-blur-md 
                             bg-white/95 hover:bg-white/100 dark:bg-black/95 dark:hover:bg-black/100 
-                            text-black dark:text-white transition-all duration-300 
+                            text-black dark:text-white transition-all duration-300 cursor-pointer
                             group-hover:-translate-y-0.5 border border-black/10 dark:border-white/10
                             hover:shadow-md dark:hover:shadow-neutral-800/50"
                         >
                             <span className="opacity-90 group-hover:opacity-100 transition-opacity">
-                                Discover Excellence
+                                { text }
                             </span>
                             <span
                                 className="ml-3 opacity-70 group-hover:opacity-100 group-hover:translate-x-1.5 

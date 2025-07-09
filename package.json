@@ -4,7 +4,9 @@
   "scripts": {
     "dev:client": "cd frontend && pnpm dev",
     "dev:server": "cd backend && python server.py",
-    "dev": "concurrently \"pnpm:dev:*\""
+    "dev": "concurrently \"pnpm:dev:*\"",
+    "test": "python test_api.py",
+    "install": "pip3 install -r backend/requirements.txt"
   },
   "devDependencies": {
     "concurrently": "^9.2.0"

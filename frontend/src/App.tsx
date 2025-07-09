@@ -1,19 +1,25 @@
-import { useState } from 'react';
 import './App.css';
-import Landing from './Landing';
-import Room from './Room';
+import Hero from './components/Hero';
+import RoomEntry from './components/RoomEntry';
+import Room from './components/Room';
+import { BrowserRouter as Router, Routes, Route, useParams } from 'react-router-dom';
+
+function RoomWithParams() {
+  const { roomId } = useParams();
+  return <Room roomId={roomId || ''} />;
+}
 
 function App() {
-  const [entered, setEntered] = useState(false);
-
   return (
-    <div className="main-container">
-      {!entered ? (
-        <Landing onEnter={() => setEntered(true)} />
-      ) : (
-        <Room />
-      )}
-    </div>
+    <Router>
+      <div className="main-container">
+        <Routes>
+          <Route path="/" element={<Hero />} />
+          <Route path="/room" element={<RoomEntry />} />
+          <Route path="/room/:roomId" element={<RoomWithParams />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 

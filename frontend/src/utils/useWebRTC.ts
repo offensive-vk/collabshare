@@ -10,7 +10,7 @@ import type {
   SendWebRTCIceCandidateMessage
 } from './types';
 
-const BACKEND_URL = import.meta.env.BACKEND_URL || 'http://localhost:8001';
+export const BACKEND_URL = import.meta.env.BACKEND_URL || 'http://localhost:8001';
 const ICE_SERVERS: RTCConfiguration = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
