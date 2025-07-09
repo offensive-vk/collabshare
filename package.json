@@ -1,0 +1,12 @@
+{
+  "name": "my-web-rtc",
+  "private": true,
+  "scripts": {
+    "dev:client": "cd frontend && pnpm dev",
+    "dev:server": "cd backend && python server.py",
+    "dev": "concurrently \"pnpm:dev:*\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.0"
+  }
+}
