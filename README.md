@@ -22,39 +22,13 @@ CollabShare is a minimal, black-and-white themed collaboration platform that all
 
 ## 📁 File Structure
 
-```
-/app/
-├── README.md                    # This documentation file
-├── backend/                    # FastAPI backend server
-│   ├── server.py              # Main FastAPI application with WebSocket endpoints
-│   ├── requirements.txt       # Python dependencies
-│   └── .env                   # Backend environment variables
-├── frontend/                   # React frontend application
-│   ├── package.json           # Node.js dependencies and scripts
-│   ├── yarn.lock              # Yarn lockfile
-│   ├── tailwind.config.js     # Tailwind CSS configuration
-│   ├── postcss.config.js      # PostCSS configuration
-│   ├── craco.config.js        # Create React App Configuration Override
-│   ├── .env                   # Frontend environment variables
-│   ├── public/                # Static assets
-│   │   ├── index.html         # Main HTML template
-│   │   └── favicon.ico        # Application icon
-│   └── src/                   # React source code
-│       ├── index.js           # Application entry point
-│       ├── App.js             # Main React component
-│       ├── App.css            # Component-specific styles
-│       └── index.css          # Global styles and Tailwind imports
-├── tests/                      # Test files
-│   └── backend_test.py        # Backend API and WebSocket tests
-└── scripts/                   # Utility scripts
-    └── (deployment scripts)
-```
+Coming soon!
 
 ## 🔧 Environment Setup
 
 ### Prerequisites
 
-- **Python 3.9+**: Backend server
+- **Python 3.12+**: Backend server
 - **Node.js 18+**: Frontend application
 - **Yarn**: Package manager for frontend
 - **MongoDB**: Database (configured via environment variables)

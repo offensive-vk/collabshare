@@ -1,6 +1,10 @@
 {
   "name": "my-web-rtc",
   "private": true,
+  "author": {
+    "name": "Vedansh",
+    "url": ""
+  },
   "scripts": {
     "dev:client": "cd frontend && pnpm dev",
     "dev:server": "cd backend && python server.py",
