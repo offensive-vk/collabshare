@@ -1,0 +1,50 @@
+my-web-rtc/
+├── assets/
+│   └── authors_note.txt
+├── backend/
+│   ├── requirements.txt
+│   └── server.py
+├── frontend/
+│   ├── components.json
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package.json
+│   ├── pnpm-lock.yaml
+│   ├── public/
+│   │   ├── react.svg
+│   │   └── vite.svg
+│   ├── README.md
+│   ├── src/
+│   │   ├── App.css
+│   │   ├── App.tsx
+│   │   ├── assets/
+│   │   │   └── author
+│   │   ├── components/
+│   │   │   ├── Hero.tsx
+│   │   │   ├── HomeBtn.tsx
+│   │   │   ├── Room.tsx (Updated: Main screen layout, acrylic effects, animations)
+│   │   │   ├── RoomEntry.tsx (Updated: Improved confirmation dialog)
+│   │   │   ├── ThemeToggle.tsx
+│   │   │   └── ui/
+│   │   │       ├── background-paths.tsx
+│   │   │       └── button.tsx
+│   │   ├── index.html
+│   │   ├── lib/
+│   │   │   └── utils.ts
+│   │   ├── main.css
+│   │   ├── main.tsx
+│   │   ├── utils/
+│   │   │   ├── types.ts (Updated: Fixed WebSocket message types)
+│   │   │   └── useWebRTC.ts (Updated: Better connection handling, loading states)
+│   │   └── vite-env.d.ts
+│   ├── tsconfig.app.json
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   └── vite.config.ts
+├── LICENSE
+├── package.json
+├── pnpm-lock.yaml
+├── pnpm-workspace.yaml
+├── README.md
+├── test_api.py
+└── treemap

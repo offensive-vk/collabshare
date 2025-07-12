@@ -5,8 +5,12 @@ import Room from './components/Room';
 import { BrowserRouter as Router, Routes, Route, useParams } from 'react-router-dom';
 
 function RoomWithParams() {
-  const { roomId } = useParams();
-  return <Room roomId={roomId || ''} />;
+  const { roomId, username } = useParams();
+  return <Room roomId={roomId || ''} username={username || ''} />;
+}
+
+function TestRoom() {
+  return <Room roomId="TEST123" username="testuser" testMode={true} />;
 }
 
 function App() {
@@ -16,7 +20,8 @@ function App() {
         <Routes>
           <Route path="/" element={<Hero />} />
           <Route path="/room" element={<RoomEntry />} />
-          <Route path="/room/:roomId" element={<RoomWithParams />} />
+          <Route path="/room/:roomId/:username" element={<RoomWithParams />} />
+          <Route path="/test-room" element={<TestRoom />} />
         </Routes>
       </div>
     </Router>
