@@ -1,36 +1,46 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { BACKEND_URL } from '../utils/useWebRTC';
 import ThemeToggle from './ThemeToggle';
 import HomeBtn from './HomeBtn';
 
 const RoomEntry: React.FC = () => {
-  const [username, setUsername] = useState<string>('');
+  const [searchParams] = useSearchParams();
+  const [username, setUsername] = useState<string>(searchParams.get('username') || '');
   const [roomIdInput, setRoomIdInput] = useState('');
   const [error, setError] = useState('');
+  const [mode, setMode] = useState<'none' | 'join' | 'create'>('none');
   const navigate = useNavigate();
 
-  const handleEnter = async (e: React.FormEvent) => {
+  const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username.trim()) {
-      setError('Username is empty!');
+    if (!username.trim() || !roomIdInput.trim()) {
+      setError('Username and Room ID are required!');
       return;
     }
-    if (!roomIdInput.trim()) {
-      // Create room
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/rooms`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ max_participants: 5 }),
-        });
-        const data = await res.json();
-        navigate(`/room/${data.room_id}`);
-      } catch {
-        setError('Failed to create room');
-      }
-    } else {
-      navigate(`/room/${roomIdInput}`);
+    setError('');
+    // Try to join room by navigating, let Room handle error
+    navigate(`/room/${roomIdInput.trim()}`, { state: { username: username.trim() } });
+  };
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!username.trim()) {
+      setError('Username is required!');
+      return;
+    }
+    setError('Creating room...');
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/rooms`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ max_participants: 5 }),
+      });
+      if (!res.ok) throw new Error('Failed to create room');
+      const data = await res.json();
+      navigate(`/room/${data.room_id}`, { state: { username: username.trim() } });
+    } catch {
+      setError('Failed to create room');
     }
   };
 
@@ -39,31 +49,89 @@ const RoomEntry: React.FC = () => {
       <HomeBtn />
       <ThemeToggle />
       <h2 style={{ fontSize: '2rem', fontWeight: 600, marginBottom: 16 }}>Join or Create a Room</h2>
-      <form onSubmit={handleEnter} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, width: 320, maxWidth: '90vw' }}>
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={e => setUsername(e.target.value)}
-          required
-          style={{ fontSize: 16, width: '100%', marginBottom: 8, borderRadius: 8, padding: '0.75rem 1.2rem', border: '1px solid #fff', background: '#222', color: '#fff' }}
-        />
-        <input
-          type="text"
-          placeholder="Room ID (leave blank to create one)"
-          value={roomIdInput}
-          onChange={e => setRoomIdInput(e.target.value)}
-          style={{ fontSize: 16, width: '100%', marginBottom: 8, borderRadius: 8, padding: '0.75rem 1.2rem', border: '1px solid #fff', background: '#222', color: '#fff' }}
-        />
-        <button
-          className="bw-btn"
-          style={{ minWidth: 220, padding: '1.1rem 2.8rem', fontSize: '1.3rem', borderRadius: '1rem', background: '#fff', color: '#000', fontWeight: 700, boxShadow: '0 2px 8px rgba(0,0,0,0.12)', transition: 'all 0.2s', border: 'none', cursor: 'pointer' }}
-          type="submit"
-        >
-          {roomIdInput ? 'Join' : 'Create'}
-        </button>
-      </form>
-      {error && <div style={{ color: 'red', marginTop: 12 }}>{error}</div>}
+      {mode === 'none' && (
+        <div style={{ display: 'flex', gap: 24, marginBottom: 32 }}>
+          <button
+            className="bw-btn"
+            onClick={() => setMode('join')}
+          >
+            Join Room
+          </button>
+          <button
+            className="bw-btn"
+            onClick={() => setMode('create')}
+          >
+            Create Room
+          </button>
+        </div>
+      )}
+      {mode === 'join' && (
+        <form onSubmit={handleJoin} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, width: 320, maxWidth: '90vw' }}>
+          <input
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={e => setUsername(e.target.value)}
+            required
+            style={{ fontSize: 16, width: '100%', marginBottom: 8, borderRadius: 8, padding: '0.75rem 1.2rem', border: '1px solid #fff', background: '#222', color: '#fff' }}
+          />
+          <input
+            type="text"
+            placeholder="Room ID"
+            value={roomIdInput}
+            onChange={e => setRoomIdInput(e.target.value)}
+            required
+            style={{ fontSize: 16, width: '100%', marginBottom: 8, borderRadius: 8, padding: '0.75rem 1.2rem', border: '1px solid #fff', background: '#222', color: '#fff' }}
+          />
+          <div style={{ display: 'flex', gap: 16 }}>
+            <button
+              className="bw-btn"
+              style={{ minWidth: 120, padding: '0.8rem 2rem', fontSize: '1.1rem', borderRadius: '1rem', background: '#fff', color: '#000', fontWeight: 700, border: 'none', cursor: 'pointer' }}
+              type="submit"
+            >
+              Join
+            </button>
+            <button
+              className="bw-btn"
+              style={{ minWidth: 120, padding: '0.8rem 2rem', fontSize: '1.1rem', borderRadius: '1rem', background: '#eee', color: '#333', fontWeight: 700, border: 'none', cursor: 'pointer' }}
+              type="button"
+              onClick={() => setMode('none')}
+            >
+              Back
+            </button>
+          </div>
+        </form>
+      )}
+      {mode === 'create' && (
+        <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, width: 320, maxWidth: '90vw' }}>
+          <input
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={e => setUsername(e.target.value)}
+            required
+            style={{ fontSize: 16, width: '100%', marginBottom: 8, borderRadius: 8, padding: '0.75rem 1.2rem', border: '1px solid #fff', background: '#222', color: '#fff' }}
+          />
+          <div style={{ display: 'flex', gap: 16 }}>
+            <button
+              className="bw-btn"
+              style={{ minWidth: 120, padding: '0.8rem 2rem', fontSize: '1.1rem', borderRadius: '1rem', background: '#fff', color: '#000', fontWeight: 700, border: 'none', cursor: 'pointer' }}
+              type="submit"
+            >
+              Create
+            </button>
+            <button
+              className="bw-btn"
+              style={{ minWidth: 120, padding: '0.8rem 2rem', fontSize: '1.1rem', borderRadius: '1rem', background: '#eee', color: '#333', fontWeight: 700, border: 'none', cursor: 'pointer' }}
+              type="button"
+              onClick={() => setMode('none')}
+            >
+              Back
+            </button>
+          </div>
+        </form>
+      )}
+      {error && <div style={{ color: 'red', marginTop: 18, fontWeight: 600 }}>{error}</div>}
     </div>
   );
 };

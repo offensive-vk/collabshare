@@ -11,12 +11,15 @@ export type WebSocketMessage =
 
 export interface RoomJoinedMessage {
   type: 'room_joined';
+  room_id: string;
   participants: string[];
+  username: string;
 }
 export interface ParticipantJoinedMessage {
   type: 'participant_joined';
   participants: string[];
   client_id: string;
+  username: string;
 }
 export interface ParticipantLeftMessage {
   type: 'participant_left';

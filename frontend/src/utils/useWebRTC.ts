@@ -38,14 +38,19 @@ interface UseWebRTCResult {
   stopVideo: () => void;
   startScreenShare: () => void;
   stopScreenShare: () => void;
-  remoteVideosRef: React.MutableRefObject<{ [key: string]: HTMLVideoElement }>;
+  remoteVideosRef: React.RefObject<{ [key: string]: HTMLVideoElement }>;
   roomId: string;
 }
 
 export function useWebRTC(localVideoRef: React.RefObject<HTMLVideoElement>): UseWebRTCResult {
   const [websocket, setWebsocket] = useState<WebSocket | null>(null);
   const [clientId, setClientId] = useState<string>('');
-  const [roomId, setRoomId] = useState<string>('');
+  const [roomId, setRoomIdState] = useState<string>('');
+  const roomIdRef = useRef('');
+  const setRoomId = (id: string) => {
+    setRoomIdState(id);
+    roomIdRef.current = id;
+  };
   const [isInRoom, setIsInRoom] = useState<boolean>(false);
   const [participants, setParticipants] = useState<string[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -97,17 +102,24 @@ export function useWebRTC(localVideoRef: React.RefObject<HTMLVideoElement>): Use
 
   // Handle WebSocket messages
   const handleWebSocketMessage = (data: WebSocketMessage) => {
+    console.log('Received WebSocket message:', data);
     switch (data.type) {
       case 'room_joined':
+        console.log('Room joined successfully:', data);
         setIsInRoom(true);
         setParticipants(data.participants);
         setError('');
         break;
       case 'participant_joined':
+        console.log('Participant joined:', data);
         setParticipants(data.participants);
-        createPeerConnection(data.client_id);
+        // Only create peer connection if the participant is not self
+        if (data.client_id !== clientId) {
+          createPeerConnection(data.client_id);
+        }
         break;
       case 'participant_left':
+        console.log('Participant left:', data);
         setParticipants(prev => prev.filter(p => p !== data.client_id));
         if (peerConnectionsRef.current[data.client_id]) {
           peerConnectionsRef.current[data.client_id].close();
@@ -127,31 +139,48 @@ export function useWebRTC(localVideoRef: React.RefObject<HTMLVideoElement>): Use
         setMessages(prev => [...prev, data]);
         break;
       case 'error':
+        alert(data.message)
+        console.error('Server error:', data.message);
         setError(data.message);
         break;
       default:
-        // do nothing
+        console.log('Unknown message type:', data);
         break;
     }
   };
 
-  // Send WebSocket message
+  // Send WebSocket message with retry
   const sendWebSocketMessage = (message: object) => {
+    console.log('Attempting to send WebSocket message:', message);
     if (websocketRef.current && websocketRef.current.readyState === WebSocket.OPEN) {
       websocketRef.current.send(JSON.stringify(message));
+      console.log('WebSocket message sent successfully');
     } else {
-      setError('Connection not available');
+      console.error('WebSocket not ready. State:', websocketRef.current?.readyState);
+      // Retry after a short delay
+      setTimeout(() => {
+        if (websocketRef.current && websocketRef.current.readyState === WebSocket.OPEN) {
+          websocketRef.current.send(JSON.stringify(message));
+          console.log('WebSocket message sent successfully on retry');
+        } else {
+          console.error('WebSocket still not ready after retry');
+          setError('Connection not available');
+        }
+      }, 500);
     }
   };
 
-  // Join or create room
+  // Join or create room with better connection handling
   const joinRoom = (username: string, roomIdInput: string) => {
+    console.log('joinRoom called with:', { username, roomIdInput });
     if (!username.trim()) {
       setError('Please enter a username');
       return;
     }
     if (!roomIdInput.trim()) {
       // Create room
+      console.log('Creating new room...');
+      setError('Creating room...');
       fetch(`${BACKEND_URL}/api/rooms`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -159,21 +188,45 @@ export function useWebRTC(localVideoRef: React.RefObject<HTMLVideoElement>): Use
       })
         .then(res => res.json())
         .then(data => {
+          console.log('Room created:', data);
           setRoomId(data.room_id);
+          setError('Joining room...');
+          // Wait for WebSocket to be ready
+          const attemptJoin = () => {
+            if (websocketRef.current && websocketRef.current.readyState === WebSocket.OPEN) {
+              sendWebSocketMessage({
+                type: 'join_room',
+                room_id: data.room_id, // use directly from API response
+                username,
+              } as JoinRoomMessage);
+            } else {
+              console.log('WebSocket not ready, retrying in 100ms...');
+              setTimeout(attemptJoin, 100);
+            }
+          };
+          attemptJoin();
+        })
+        .catch((error) => {
+          console.error('Failed to create room:', error);
+          setError('Failed to create room');
+        });
+    } else {
+      console.log('Joining existing room:', roomIdInput);
+      setRoomId(roomIdInput);
+      setError('Joining room...');
+      const attemptJoin = () => {
+        if (websocketRef.current && websocketRef.current.readyState === WebSocket.OPEN) {
           sendWebSocketMessage({
             type: 'join_room',
-            room_id: data.room_id,
+            room_id: roomIdInput, // use directly from input
             username,
           } as JoinRoomMessage);
-        })
-        .catch(() => setError('Failed to create room'));
-    } else {
-      setRoomId(roomIdInput);
-      sendWebSocketMessage({
-        type: 'join_room',
-        room_id: roomIdInput,
-        username,
-      } as JoinRoomMessage);
+        } else {
+          console.log('WebSocket not ready, retrying in 100ms...');
+          setTimeout(attemptJoin, 100);
+        }
+      };
+      attemptJoin();
     }
   };
 
@@ -181,7 +234,7 @@ export function useWebRTC(localVideoRef: React.RefObject<HTMLVideoElement>): Use
   const leaveRoom = () => {
     sendWebSocketMessage({
       type: 'leave_room',
-      room_id: roomId,
+      room_id: roomIdRef.current,
     } as LeaveRoomMessage);
     setIsInRoom(false);
     setParticipants([]);
@@ -296,7 +349,7 @@ export function useWebRTC(localVideoRef: React.RefObject<HTMLVideoElement>): Use
           type: 'webrtc_ice_candidate',
           target: targetClientId,
           candidate: event.candidate,
-          room_id: roomId,
+          room_id: roomIdRef.current,
         } as SendWebRTCIceCandidateMessage);
       }
     };
@@ -323,7 +376,7 @@ export function useWebRTC(localVideoRef: React.RefObject<HTMLVideoElement>): Use
         type: 'webrtc_offer',
         target: targetClientId,
         offer: offer,
-        room_id: roomId,
+        room_id: roomIdRef.current,
       } as SendWebRTCOfferMessage);
     } catch {}
   };
@@ -336,7 +389,7 @@ export function useWebRTC(localVideoRef: React.RefObject<HTMLVideoElement>): Use
             type: 'webrtc_ice_candidate',
             target: data.from,
             candidate: event.candidate,
-            room_id: roomId,
+            room_id: roomIdRef.current,
           } as SendWebRTCIceCandidateMessage);
         }
       };
@@ -359,7 +412,7 @@ export function useWebRTC(localVideoRef: React.RefObject<HTMLVideoElement>): Use
         type: 'webrtc_answer',
         target: data.from,
         answer: answer,
-        room_id: roomId,
+        room_id: roomIdRef.current,
       } as SendWebRTCAnswerMessage);
     } catch {}
   };
@@ -381,13 +434,13 @@ export function useWebRTC(localVideoRef: React.RefObject<HTMLVideoElement>): Use
     if (newMessage.trim()) {
       sendWebSocketMessage({
         type: 'chat_message',
-        room_id: roomId,
+        room_id: roomIdRef.current,
         message: newMessage,
         username: clientId,
       });
       setNewMessage('');
     }
-  }, [newMessage, roomId, clientId]);
+  }, [newMessage, clientId]);
 
   return {
     isInRoom,
