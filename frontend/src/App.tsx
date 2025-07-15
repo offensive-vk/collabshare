@@ -10,7 +10,7 @@ function RoomWithParams() {
 }
 
 function TestRoom() {
-  return <Room roomId="TEST123" username="testuser" testMode={true} />;
+  return <Room roomId="developer-mode" username="developer" testMode={true} />;
 }
 
 function App() {
