@@ -1,0 +1,13 @@
+{
+    "name": "my-web-rtc",
+    "private": true,
+    "author": {
+        "name": "Vedansh",
+        "url": "https://github.com/offensive-vk/my-web-rtc"
+    },
+    "scripts": {
+        "dev": "python server.py",
+        "test": "python ../test_api.py",
+        "install": "pip3 install -r requirements.txt"
+    }
+}

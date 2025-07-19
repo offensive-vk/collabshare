@@ -7,8 +7,7 @@
     "dev": "vite --port 8111 -d --force",
     "build": "tsc -b && vite build -d",
     "lint": "eslint .",
-    "preview": "vite preview --port 8111 -d",
-    "test": "python test_api.py"
+    "preview": "vite preview --port 8111 -d"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",

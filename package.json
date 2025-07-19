@@ -3,14 +3,13 @@
   "private": true,
   "author": {
     "name": "Vedansh",
-    "url": ""
+    "url": "https://github.com/offensive-vk/my-web-rtc"
   },
   "scripts": {
     "dev:client": "cd frontend && pnpm dev",
     "dev:server": "cd backend && python server.py",
     "dev": "concurrently \"pnpm:dev:*\"",
-    "test": "python test_api.py",
-    "install": "pip3 install -r backend/requirements.txt"
+    "test": "python test_api.py"
   },
   "devDependencies": {
     "concurrently": "^9.2.0"
