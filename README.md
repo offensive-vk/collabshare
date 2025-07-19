@@ -1,359 +1,71 @@
 # CollabShare - WebRTC Collaboration Platform
 
-A full-stack web application that enables real-time screen sharing, video/audio communication, and chat between multiple participants using WebRTC technology.
+A full-stack web application for real-time screen sharing, video/audio communication, and chat using WebRTC.
 
 ## 🚀 Overview
 
-CollabShare is a minimal, black-and-white themed collaboration platform that allows up to 5 participants per room to:
+CollabShare enables up to 5 participants per room to:
 
 - Share screens in real-time
 - Enable video and audio communication
-- Chat with disposable messages
+- Chat with disposable messages (messages are not persisted and are deleted when the session ends)
 - Create and join rooms with unique codes
-- Auto-cleanup empty rooms
+- Auto-cleanup empty rooms when all participants leave
 
 ## 🏗️ Architecture
 
-- **Frontend**: React 19 with Tailwind CSS
-- **Backend**: FastAPI with native WebSockets
-- **Database**: MongoDB (for future extensions)
-- **Real-time Communication**: Native WebSockets + WebRTC
-- **Deployment**: Kubernetes container environment
+- **Frontend**: React 19, Tailwind CSS
+- **Backend**: FastAPI, native WebSockets
+- **Database**: MongoDB (future use)
+- **Real-time**: WebSockets + WebRTC
+- **Deployment**: Kubernetes-ready
 
-## 📁 File Structure
-
-Coming soon!
-
-## 🔧 Environment Setup
-
-### Prerequisites
-
-- **Python 3.12+**: Backend server
-- **Node.js 18+**: Frontend application
-- **Yarn**: Package manager for frontend
-- **MongoDB**: Database (configured via environment variables)
-
-### Environment Variables
-
-#### Backend (.env)
-
-```bash
-# Database Configuration
-MONGO_URL=mongodb://localhost:27017/collabshare
-
-# Server Configuration
-PORT=8001
-HOST=0.0.0.0
-```
-
-#### Frontend (.env)
-
-```bash
-# Backend API URL (configured for production)
-REACT_APP_BACKEND_URL=https://your-domain.com
-```
-
-## 🛠️ Development Commands
-
-#### Install Dependencies
-
-```bash
-cd backend/
-pip install -r requirements.txt
-```
-
-#### Run Development Server
-
-```bash
-cd backend/
-python server.py
-```
-
-#### Run Backend Tests
-
-```bash
-cd backend/
-python -m pytest tests/ -v
-```
-
-#### Manual API Testing
-
-```bash
-# Health check
-curl https://your-domain.com/api/
-
-# Create room
-curl -X POST https://your-domain.com/api/rooms \
-  -H "Content-Type: application/json" \
-  -d '{"max_participants": 5}'
-
-# Get room details
-curl https://your-domain.com/api/rooms/{room_id}
-```
-
-### Frontend Development
-
-#### Install Dependencies
-
-```bash
-cd frontend/
-yarn install
-```
-
-#### Run Development Server
-
-```bash
-cd frontend/
-yarn start
-```
-
-#### Build for Production
-
-```bash
-cd frontend/
-yarn build
-```
-
-#### Run Frontend Tests
-
-```bash
-cd frontend/
-yarn test
-```
-
-#### Linting and Formatting
-
-```bash
-cd frontend/
-yarn lint
-yarn format
-```
-
-<!-- ## 🚀 Production Deployment
-
-### Using Supervisor (Current Setup)
-
-#### Start All Services
-```bash
-sudo supervisorctl start all
-```
-
-#### Restart Services
-```bash
-sudo supervisorctl restart frontend
-sudo supervisorctl restart backend
-sudo supervisorctl restart all
-```
-
-#### Check Service Status
-```bash
-sudo supervisorctl status
-```
-
-#### View Logs
-```bash
-# Backend logs
-tail -f /var/log/supervisor/backend.*.log
-
-# Frontend logs
-tail -f /var/log/supervisor/frontend.*.log
-```
-
-### Manual Deployment
-
-#### Backend
-```bash
-cd backend/
-uvicorn server:app --host 0.0.0.0 --port 8001
-```
-
-#### Frontend
-```bash
-cd frontend/
-yarn build
-serve -s build -l 3000
-```
-
-## 🧪 Testing
-
-### Backend Testing
-```bash
-cd backend/
-python backend_test.py
-``` -->
-
-**Test Coverage:**
-
-- ✅ API endpoints (health, room management)
-- ✅ WebSocket connections
-- ✅ Room joining/leaving
-- ✅ WebRTC signaling
-- ✅ Chat message broadcasting
-- ✅ Participant limits
-- ✅ Auto-cleanup functionality
-
-**Manual Testing Checklist:**
-
-- [ ] Room creation and unique code generation
-- [ ] Room joining with valid/invalid codes
-- [ ] WebSocket connection status
-- [ ] Screen sharing functionality
-- [ ] Video/audio streaming
-- [ ] Chat messaging
-- [ ] Participant management
-- [ ] Room cleanup on exit
-
-## 🔌 API Documentation
-
-### REST API Endpoints
-
-#### Health Check
+## 📐 Application Layout
 
 ```
-GET /api/
-Response: {"message": "WebRTC Collaboration Server"}
++-------------------+         +-------------------+
+|    Frontend       | <-----> |     Backend       |
+| (React, WebRTC)   |  HTTP   |  (FastAPI, WS)    |
++-------------------+         +-------------------+
+         |                              |
+         | WebSocket (Signaling, Chat)  |
+         +------------------------------+
+         |                              |
+         v                              v
+   [Browser: Video/Audio/Screen]   [In-memory Rooms]
 ```
 
-#### Create Room
+- **Frontend**: Handles UI, WebRTC peer connections, and WebSocket signaling.
+- **Backend**: Manages rooms, relays signaling and chat, enforces participant limits, and cleans up empty rooms.
 
-```text
-POST /api/rooms
-Body: {"max_participants": 5}
-Response: {"room_id": "ABC123", "room": {...}}
-```
+## 📁 File Structure (see `treemap` for details)
 
-#### Get Room Details
+- `frontend/src/components/Room.tsx` (Updated): Main room UI, video grid, chat, controls
+- `frontend/src/utils/useWebRTC.ts` (Updated): WebRTC and WebSocket logic, connection handling
+- `frontend/src/utils/types.ts` (Updated): WebSocket message types
+- `test_api.py` (Updated): API and WebSocket integration tests
 
-```
-GET /api/rooms/{room_id}
-Response: {"room": {"id": "ABC123", "participants": [...], ...}}
-```
+## 🔒 Security Policy
 
-#### List All Rooms
+See [SECURITY.md](./SECURITY.md) for details on current and recommended security practices.
 
-```
-GET /api/rooms
-Response: {"rooms": ["ABC123", "DEF456", ...]}
-```
+## 🧩 Key Features & Flows
 
-### WebSocket API
-
-```text
-WebSocket: /ws/{client_id}
-```
-
-#### Message Types
-
-**Join Room**
-```json
-{
-  "type": "join_room",
-  "room_id": "ABC123",
-  "username": "User123"
-}
-```
-
-**Leave Room**
-```json
-{
-  "type": "leave_room",
-  "room_id": "ABC123"
-}
-```
-
-**Chat Message**
-```json
-{
-  "type": "chat_message",
-  "room_id": "ABC123",
-  "message": "Hello everyone!",
-  "username": "User123"
-}
-```
-
-**WebRTC Signaling**
-```json
-{
-  "type": "webrtc_offer",
-  "target": "target_client_id",
-  "room_id": "ABC123",
-  "offer": {"type": "offer", "sdp": "..."}
-}
-```
-
-## ⚙️ Configuration
-
-### WebRTC Configuration
-
-```javascript
-const ICE_SERVERS = {
-  iceServers: [
-    { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' },
-    { urls: 'stun:stun2.l.google.com:19302' }
-  ]
-};
-```
-
-### Room Settings
-
-- **Max Participants**: 5 (configurable)
-- **Preferred Participants**: 2 (optimal performance)
-- **Auto-cleanup**: Enabled for empty rooms
-- **Chat**: Disposable (messages deleted on session end)
-
-### Performance Optimization
-
-#### Backend
-
-- Use connection pooling for database
-- Implement Redis for session management
-- Add rate limiting for WebSocket connections
-
-#### Frontend
-
-- Implement lazy loading for components
-- Optimize video rendering
-- Add connection quality monitoring
-
-## 📊 Monitoring
-
-### Health Checks
-
-```bash
-# Backend health
-curl https://your-domain.com/api/
-
-# Frontend health
-curl https://your-domain.com/
-
-# WebSocket health
-wscat -c wss://your-domain.com/ws/health_check
-```
-
-### Metrics to Monitor
-
-- WebSocket connection count
-- Active rooms count
-- Message throughput
-- Error rates
-- Response times
+- **Room Creation/Joining**: POST `/api/rooms` to create, then join via WebSocket with a username and room code
+- **Chat**: Disposable, not persisted, broadcast to all in room
+- **WebRTC Signaling**: Offers, answers, and ICE candidates relayed via backend
+- **Room Cleanup**: Empty rooms are deleted automatically
+- **Error Handling**: Room full/not found errors are sent as WebSocket error messages
 
 ## 🛡️ Security Considerations
 
-### Current Implementation
+- CORS enabled for all origins (dev)
+- No authentication by default
+- See [SECURITY.md](./SECURITY.md) for production recommendations
 
-- CORS enabled for all origins (development)
-- No authentication required
-- WebSocket connections are open
+## 📊 Monitoring & Health
 
-### Production Recommendations
-
-- Implement user authentication
-- Add rate limiting
-- Use secure WebSocket (WSS)
-- Implement room access controls
-- Add input validation and sanitization
+- Health endpoints, WebSocket status, and room metrics
 
 ## 📝 Contributing
 

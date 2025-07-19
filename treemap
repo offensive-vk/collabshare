@@ -22,8 +22,8 @@ my-web-rtc/
 │   │   ├── components/
 │   │   │   ├── Hero.tsx
 │   │   │   ├── HomeBtn.tsx
-│   │   │   ├── Room.tsx (Updated: Main screen layout, acrylic effects, animations)
-│   │   │   ├── RoomEntry.tsx (Updated: Improved confirmation dialog)
+│   │   │   ├── Room.tsx (Updated)
+│   │   │   ├── RoomEntry.tsx (Updated)
 │   │   │   ├── ThemeToggle.tsx
 │   │   │   └── ui/
 │   │   │       ├── background-paths.tsx
@@ -34,8 +34,8 @@ my-web-rtc/
 │   │   ├── main.css
 │   │   ├── main.tsx
 │   │   ├── utils/
-│   │   │   ├── types.ts (Updated: Fixed WebSocket message types)
-│   │   │   └── useWebRTC.ts (Updated: Better connection handling, loading states)
+│   │   │   ├── types.ts (Updated)
+│   │   │   └── useWebRTC.ts (Updated)
 │   │   └── vite-env.d.ts
 │   ├── tsconfig.app.json
 │   ├── tsconfig.json
@@ -46,5 +46,5 @@ my-web-rtc/
 ├── pnpm-lock.yaml
 ├── pnpm-workspace.yaml
 ├── README.md
-├── test_api.py
+├── test_api.py (Updated)
 └── treemap

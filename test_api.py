@@ -155,11 +155,11 @@ class WebRTCCollabAPITester:
         """Join a room via WebSocket"""
         if username is None:
             username = f"TestUser_{client_id[:4]}"
-            
+        
         if client_id not in self.ws_connections:
             print(f"❌ Client {client_id} not connected to WebSocket")
             return False
-            
+        
         self.tests_run += 1
         print(f"\n🔍 Testing Room Join for client {client_id} to room {room_id}...")
         
@@ -171,34 +171,34 @@ class WebRTCCollabAPITester:
             }
             await self.ws_connections[client_id].send(json.dumps(message))
             
-            # Wait for response - we might get participant_joined first
+            # Wait for response - expect either 'room_joined' or 'error'
             response = await asyncio.wait_for(self.ws_connections[client_id].recv(), timeout=5)
             response_data = json.loads(response)
             self.received_messages[client_id].append(response_data)
             
-            # Check if we got a participant_joined message
-            if response_data.get("type") == "participant_joined" and client_id in response_data.get("participants", []):
-                print(f"✅ Received participant_joined message for client {client_id}")
-                
-                # Try to get another message which might be room_joined
+            if response_data.get("type") == "error":
+                print(f"❌ Failed to join room. Error: {response_data.get('message')}")
+                return False
+            
+            # Check for 'room_joined' message
+            if response_data.get("type") == "room_joined" and response_data.get("room_id") == room_id:
+                self.tests_passed += 1
+                print(f"✅ Client {client_id} successfully joined room {room_id}")
+                return True
+            # If we get 'participant_joined' first, try to get 'room_joined' next
+            elif response_data.get("type") == "participant_joined":
                 try:
                     response = await asyncio.wait_for(self.ws_connections[client_id].recv(), timeout=2)
                     response_data = json.loads(response)
                     self.received_messages[client_id].append(response_data)
+                    if response_data.get("type") == "room_joined" and response_data.get("room_id") == room_id:
+                        self.tests_passed += 1
+                        print(f"✅ Client {client_id} successfully joined room {room_id}")
+                        return True
                 except asyncio.TimeoutError:
-                    # If we don't get another message, that's okay
                     pass
-            
-            # Check if we got a room_joined message or if we're in the participants list
-            if (response_data.get("type") == "room_joined" and response_data.get("room_id") == room_id) or \
-               (response_data.get("type") == "participant_joined" and client_id in response_data.get("participants", [])):
-                self.tests_passed += 1
-                print(f"✅ Client {client_id} successfully joined room {room_id}")
-                return True
-            else:
-                print(f"❌ Failed to join room. Response: {response_data}")
-                return False
-                
+            print(f"❌ Failed to join room. Response: {response_data}")
+            return False
         except Exception as e:
             print(f"❌ Room join failed: {str(e)}")
             return False
@@ -242,7 +242,7 @@ class WebRTCCollabAPITester:
         if client_id not in self.ws_connections:
             print(f"❌ Client {client_id} not connected to WebSocket")
             return False
-            
+        
         self.tests_run += 1
         print(f"\n🔍 Testing Chat Message from client {client_id} in room {room_id}...")
         
@@ -254,10 +254,17 @@ class WebRTCCollabAPITester:
                 "username": f"TestUser_{client_id[:4]}"
             }
             await self.ws_connections[client_id].send(json.dumps(message))
-            print(f"✅ Chat message sent from client {client_id}")
-            self.tests_passed += 1
-            return True
-                
+            # Wait for chat message to be broadcast to all participants (including sender)
+            response = await asyncio.wait_for(self.ws_connections[client_id].recv(), timeout=5)
+            response_data = json.loads(response)
+            self.received_messages[client_id].append(response_data)
+            if response_data.get("type") == "chat_message" and response_data.get("message") == message_text:
+                print(f"✅ Chat message sent and received by client {client_id}")
+                self.tests_passed += 1
+                return True
+            else:
+                print(f"❌ Chat message not received as expected: {response_data}")
+                return False
         except Exception as e:
             print(f"❌ Sending chat message failed: {str(e)}")
             return False
@@ -267,7 +274,7 @@ class WebRTCCollabAPITester:
         if sender_id not in self.ws_connections or receiver_id not in self.ws_connections:
             print(f"❌ One or both clients not connected to WebSocket")
             return False
-            
+        
         self.tests_run += 1
         print(f"\n🔍 Testing WebRTC Signaling between {sender_id} and {receiver_id}...")
         
@@ -282,28 +289,22 @@ class WebRTCCollabAPITester:
                         print(f"Cleared pending message for {client_id}: {response_data}")
                 except asyncio.TimeoutError:
                     pass
-            
             # Send offer
             offer_message = {
                 "type": "webrtc_offer",
                 "target": receiver_id,
-                "room_id": room_id,
-                "offer": {
-                    "type": "offer",
-                    "sdp": "test_sdp_offer_data"
-                }
+                "offer": {"type": "offer", "sdp": "test_sdp_offer_data"},
+                "room_id": room_id
             }
             await self.ws_connections[sender_id].send(json.dumps(offer_message))
             print(f"Sent WebRTC offer from {sender_id} to {receiver_id}")
-            
             # Wait for offer to be received
             offer_received = False
-            for _ in range(3):  # Try up to 3 times
+            for _ in range(3):
                 try:
                     response = await asyncio.wait_for(self.ws_connections[receiver_id].recv(), timeout=5)
                     response_data = json.loads(response)
                     self.received_messages[receiver_id].append(response_data)
-                    
                     if response_data.get("type") == "webrtc_offer" and response_data.get("from") == sender_id:
                         print(f"✅ WebRTC offer successfully received by {receiver_id}")
                         offer_received = True
@@ -313,32 +314,25 @@ class WebRTCCollabAPITester:
                 except asyncio.TimeoutError:
                     print("Timeout waiting for offer response")
                     break
-            
             if not offer_received:
                 print(f"❌ WebRTC offer not received correctly after multiple attempts")
                 return False
-                
             # Send answer
             answer_message = {
                 "type": "webrtc_answer",
                 "target": sender_id,
-                "room_id": room_id,
-                "answer": {
-                    "type": "answer",
-                    "sdp": "test_sdp_answer_data"
-                }
+                "answer": {"type": "answer", "sdp": "test_sdp_answer_data"},
+                "room_id": room_id
             }
             await self.ws_connections[receiver_id].send(json.dumps(answer_message))
             print(f"Sent WebRTC answer from {receiver_id} to {sender_id}")
-            
             # Wait for answer to be received
             answer_received = False
-            for _ in range(3):  # Try up to 3 times
+            for _ in range(3):
                 try:
                     response = await asyncio.wait_for(self.ws_connections[sender_id].recv(), timeout=5)
                     response_data = json.loads(response)
                     self.received_messages[sender_id].append(response_data)
-                    
                     if response_data.get("type") == "webrtc_answer" and response_data.get("from") == receiver_id:
                         print(f"✅ WebRTC answer successfully received by {sender_id}")
                         answer_received = True
@@ -348,33 +342,25 @@ class WebRTCCollabAPITester:
                 except asyncio.TimeoutError:
                     print("Timeout waiting for answer response")
                     break
-            
             if not answer_received:
                 print(f"❌ WebRTC answer not received correctly after multiple attempts")
                 return False
-                
             # Send ICE candidate
             ice_message = {
                 "type": "webrtc_ice_candidate",
                 "target": receiver_id,
-                "room_id": room_id,
-                "candidate": {
-                    "candidate": "test_ice_candidate_data",
-                    "sdpMid": "0",
-                    "sdpMLineIndex": 0
-                }
+                "candidate": {"candidate": "test_ice_candidate_data", "sdpMid": "0", "sdpMLineIndex": 0},
+                "room_id": room_id
             }
             await self.ws_connections[sender_id].send(json.dumps(ice_message))
             print(f"Sent WebRTC ICE candidate from {sender_id} to {receiver_id}")
-            
             # Wait for ICE candidate to be received
             ice_received = False
-            for _ in range(3):  # Try up to 3 times
+            for _ in range(3):
                 try:
                     response = await asyncio.wait_for(self.ws_connections[receiver_id].recv(), timeout=5)
                     response_data = json.loads(response)
                     self.received_messages[receiver_id].append(response_data)
-                    
                     if response_data.get("type") == "webrtc_ice_candidate" and response_data.get("from") == sender_id:
                         print(f"✅ WebRTC ICE candidate successfully received by {receiver_id}")
                         ice_received = True
@@ -384,14 +370,11 @@ class WebRTCCollabAPITester:
                 except asyncio.TimeoutError:
                     print("Timeout waiting for ICE candidate response")
                     break
-            
             if not ice_received:
                 print(f"❌ WebRTC ICE candidate not received correctly after multiple attempts")
                 return False
-                
             self.tests_passed += 1
             return True
-                
         except Exception as e:
             print(f"❌ WebRTC signaling test failed: {str(e)}")
             return False
