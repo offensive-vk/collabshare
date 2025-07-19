@@ -3,7 +3,7 @@
   "private": true,
   "author": {
     "name": "Vedansh",
-    "url": "https://github.com/offensive-vk/my-web-rtc"
+    "url": "https://github.com/offensive-vk/"
   },
   "scripts": {
     "dev:client": "cd frontend && pnpm dev",
