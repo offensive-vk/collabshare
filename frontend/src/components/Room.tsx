@@ -21,7 +21,6 @@ const Room: React.FC<RoomProps> = ({ roomId, username: propUsername, testMode = 
   const [mainScreen, setMainScreen] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
-  const [hasAttemptedJoin, setHasAttemptedJoin] = useState(false);
   const navigate = useNavigate();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const fullscreenVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -131,6 +130,17 @@ const Room: React.FC<RoomProps> = ({ roomId, username: propUsername, testMode = 
   const otherParticipants = displayParticipants.filter(p => p !== mainScreenParticipant);
 
   // --- Always show UI after join/create ---
+  if (!isInRoom) {
+    return (
+      <div className="flex items-center justify-center h-screen text-white">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
+          <p>Connecting to room <strong>{roomId}</strong>...</p>
+        </div>
+      </div>
+    );
+  }
+  
   if (!isInRoomOrTest && !isLoading) {
     // Only redirect if there is a real error
     if (error && (error.includes('not found') || error.includes('invalid') || error.includes('full'))) {

@@ -105,11 +105,17 @@ export function useWebRTC(localVideoRef: React.RefObject<HTMLVideoElement>): Use
     console.log('Received WebSocket message:', data);
     switch (data.type) {
       case 'room_joined':
-        console.log('Room joined successfully:', data);
         setIsInRoom(true);
         setParticipants(data.participants);
-        setError('');
-        break;
+      
+        // 👇 Create PeerConnections for each existing participant
+        data.participants.forEach((participantId: string) => {
+          if (participantId !== clientId) {
+            createPeerConnection(participantId);
+          }
+        });
+      
+        break;       
       case 'participant_joined':
         console.log('Participant joined:', data);
         setParticipants(data.participants);
@@ -218,7 +224,7 @@ export function useWebRTC(localVideoRef: React.RefObject<HTMLVideoElement>): Use
         if (websocketRef.current && websocketRef.current.readyState === WebSocket.OPEN) {
           sendWebSocketMessage({
             type: 'join_room',
-            room_id: roomIdInput, // use directly from input
+            room_id: roomIdInput,
             username,
           } as JoinRoomMessage);
         } else {

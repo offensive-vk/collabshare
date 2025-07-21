@@ -169,6 +169,13 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
                         "participants": room["participants"],
                         "username": username
                     }), client_id)
+
+                    if len(room["participants"]) == 1:
+                        await manager.send_personal_message(json.dumps({
+                            "type": "room_ready",
+                            "room_id": room_id,
+                            "you_are_sender": True
+                        }), client_id)
             
             elif message["type"] == "leave_room":
                 room_id = message["room_id"]
