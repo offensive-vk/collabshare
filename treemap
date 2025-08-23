@@ -1,13 +1,19 @@
 my-web-rtc/
+├── .git/
+├── .github/
+│   └── template.md
 ├── assets/
 │   └── authors_note.txt
 ├── backend/
+│   ├── package.json
 │   ├── requirements.txt
 │   └── server.py
 ├── frontend/
+│   ├── .gitignore
 │   ├── components.json
 │   ├── eslint.config.js
 │   ├── index.html
+│   ├── node_modules/
 │   ├── package.json
 │   ├── pnpm-lock.yaml
 │   ├── public/
@@ -18,12 +24,14 @@ my-web-rtc/
 │   │   ├── App.css
 │   │   ├── App.tsx
 │   │   ├── assets/
-│   │   │   └── author
+│   │   │   ├── author
+│   │   │   ├── problem.md
+│   │   │   └── room.md
 │   │   ├── components/
 │   │   │   ├── Hero.tsx
 │   │   │   ├── HomeBtn.tsx
-│   │   │   ├── Room.tsx (Updated)
-│   │   │   ├── RoomEntry.tsx (Updated)
+│   │   │   ├── Room.tsx
+│   │   │   ├── RoomEntry.tsx
 │   │   │   ├── ThemeToggle.tsx
 │   │   │   └── ui/
 │   │   │       ├── background-paths.tsx
@@ -34,17 +42,21 @@ my-web-rtc/
 │   │   ├── main.css
 │   │   ├── main.tsx
 │   │   ├── utils/
-│   │   │   ├── types.ts (Updated)
-│   │   │   └── useWebRTC.ts (Updated)
+│   │   │   ├── types.ts
+│   │   │   └── useWebRTC.ts
 │   │   └── vite-env.d.ts
 │   ├── tsconfig.app.json
 │   ├── tsconfig.json
 │   ├── tsconfig.node.json
 │   └── vite.config.ts
+├── .gitattributes
+├── .gitignore
 ├── LICENSE
+├── node_modules/
 ├── package.json
 ├── pnpm-lock.yaml
 ├── pnpm-workspace.yaml
 ├── README.md
-├── test_api.py (Updated)
+├── SECURITY.md
+├── test_api.py
 └── treemap
