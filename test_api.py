@@ -589,6 +589,8 @@ class WebRTCCollabAPITester:
                 return
                 
             room_id = self.created_room_id
+            # --- New: basic enter/exit tests ---
+            await self.test_enter_room_flow(room_id)
             
             # Test WebSocket connections
             client1_id = f"client1_{uuid.uuid4().hex[:8]}"
@@ -657,6 +659,64 @@ class WebRTCCollabAPITester:
         except Exception as e:
             print(f"❌ WebSocket tests failed: {str(e)}")
             await self.close_connections()
+
+    async def test_enter_room_flow(self, room_id):
+        """Basic test: connect a client and join room successfully."""
+        self.tests_run += 1
+        client_id = f"enter_client_{uuid.uuid4().hex[:8]}"
+        print(f"\n🔍 Testing enter room flow with client {client_id}...")
+        try:
+            connected = await self.connect_websocket(client_id)
+            if not connected:
+                print(f"❌ Could not connect WS for {client_id}")
+                return False
+            joined = await self.join_room(client_id, room_id)
+            if not joined:
+                print(f"❌ {client_id} failed to join room {room_id}")
+                return False
+            # Verify via API
+            success, response = self.test_get_room(room_id)
+            if success and 'room' in response and client_id in response['room'].get('participants', []):
+                print(f"✅ {client_id} present in room participants after join")
+                self.tests_passed += 1
+                return True
+            print(f"❌ {client_id} not found in room participants after join")
+            return False
+        except Exception as e:
+            print(f"❌ Enter room flow failed: {str(e)}")
+            return False
+
+    async def test_exit_room_flow(self, room_id):
+        """Basic test: client leaves and is removed from room."""
+        self.tests_run += 1
+        client_id = f"exit_client_{uuid.uuid4().hex[:8]}"
+        print(f"\n🔍 Testing exit room flow with client {client_id}...")
+        try:
+            # Connect and join first
+            connected = await self.connect_websocket(client_id)
+            if not connected:
+                print(f"❌ Could not connect WS for {client_id}")
+                return False
+            joined = await self.join_room(client_id, room_id)
+            if not joined:
+                print(f"❌ {client_id} failed to join room {room_id}")
+                return False
+            # Now leave
+            left = await self.leave_room(client_id, room_id)
+            if not left:
+                print(f"❌ {client_id} failed to leave room {room_id}")
+                return False
+            # Verify via API
+            success, response = self.test_get_room(room_id)
+            if success and 'room' in response and client_id not in response['room'].get('participants', []):
+                print(f"✅ {client_id} removed from room participants after leave")
+                self.tests_passed += 1
+                return True
+            print(f"❌ {client_id} still present in room participants after leave")
+            return False
+        except Exception as e:
+            print(f"❌ Exit room flow failed: {str(e)}")
+            return False
 
 if __name__ == "__main__":
     tester = WebRTCCollabAPITester()
