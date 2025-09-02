@@ -45,6 +45,7 @@ interface UseWebRTCResult {
 export function useWebRTC(localVideoRef: React.RefObject<HTMLVideoElement>): UseWebRTCResult {
   const [websocket, setWebsocket] = useState<WebSocket | null>(null);
   const [clientId, setClientId] = useState<string>('');
+  const clientIdRef = useRef<string>('');
   const [roomId, setRoomIdState] = useState<string>('');
   const roomIdRef = useRef('');
   const setRoomId = (id: string) => {
@@ -74,6 +75,7 @@ export function useWebRTC(localVideoRef: React.RefObject<HTMLVideoElement>): Use
   useEffect(() => {
     const newClientId = generateClientId();
     setClientId(newClientId);
+    clientIdRef.current = newClientId;
     const wsUrl = BACKEND_URL.replace('http', 'ws') + `/ws/${newClientId}`;
     const newWebSocket = new WebSocket(wsUrl);
 
@@ -110,7 +112,7 @@ export function useWebRTC(localVideoRef: React.RefObject<HTMLVideoElement>): Use
       
         // 👇 Create PeerConnections for each existing participant
         data.participants.forEach((participantId: string) => {
-          if (participantId !== clientId) {
+          if (participantId !== clientIdRef.current) {
             createPeerConnection(participantId);
           }
         });
@@ -120,7 +122,7 @@ export function useWebRTC(localVideoRef: React.RefObject<HTMLVideoElement>): Use
         console.log('Participant joined:', data);
         setParticipants(data.participants);
         // Only create peer connection if the participant is not self
-        if (data.client_id !== clientId) {
+        if (data.client_id !== clientIdRef.current) {
           createPeerConnection(data.client_id);
         }
         break;

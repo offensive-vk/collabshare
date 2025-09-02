@@ -76,6 +76,11 @@ const Room: React.FC<RoomProps> = ({ roomId, username: propUsername, testMode = 
   }, [shouldRedirect, username, navigate, testMode]);
 
   useEffect(() => {
+    if (isInRoom) {
+      setIsLoading(false);
+      setLoadingMessage('');
+      return;
+    }
     if (error && (error.includes('Creating room') || error.includes('Joining room') || error.includes('not found') || error.includes('invalid'))) {
       setIsLoading(true);
       setLoadingMessage(error);
@@ -83,7 +88,7 @@ const Room: React.FC<RoomProps> = ({ roomId, username: propUsername, testMode = 
       setIsLoading(false);
       setLoadingMessage('');
     }
-  }, [error]);
+  }, [error, isInRoom]);
 
   useEffect(() => {
     if (isFullscreen && fullscreenVideoRef.current) {
@@ -129,7 +134,7 @@ const Room: React.FC<RoomProps> = ({ roomId, username: propUsername, testMode = 
   const mainScreenParticipant = mainScreen || displayClientId;
   const otherParticipants = displayParticipants.filter(p => p !== mainScreenParticipant);
 
-  // --- Always show UI after join/create ---
+  // --- Show connecting state, then reveal UI once in room ---
   if (!isInRoom) {
     return (
       <div className="flex items-center justify-center h-screen text-white">
