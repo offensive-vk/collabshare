@@ -43,7 +43,29 @@ CollabShare enables up to 5 participants per room to:
 - `frontend/src/components/Room.tsx` (Updated): Main room UI, video grid, chat, controls
 - `frontend/src/utils/useWebRTC.ts` (Updated): WebRTC and WebSocket logic, connection handling
 - `frontend/src/utils/types.ts` (Updated): WebSocket message types
-- `test_api.py` (Updated): API and WebSocket integration tests
+- `test_api.py` (Updated): API and WebSocket integration tests, including enter/exit room flows
+
+## ✅ Tests
+
+- **What’s covered**:
+  - Room creation via REST
+  - WebSocket connect and join (enter room flow)
+  - WebSocket leave (exit room flow) with API verification
+  - Chat broadcast
+  - WebRTC signaling relay (offer/answer/ICE)
+  - Participant limit enforcement and room cleanup
+
+- **Run tests**:
+```bash
+python test_api.py
+```
+Requires backend running at `http://localhost:8001`.
+
+## 🧭 Frontend Flow Notes
+
+- `RoomEntry` navigates to `\`/room/:roomId` with `state.username`.
+- `Room` calls `joinRoom(username, roomId)` and shows the UI once `room_joined` is received.
+- Self-target WebRTC signaling is avoided using a stable client ID reference.
 
 ## 🔒 Security Policy
 
