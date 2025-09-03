@@ -30,7 +30,7 @@ my-web-rtc/
 │   │   ├── components/
 │   │   │   ├── Hero.tsx
 │   │   │   ├── HomeBtn.tsx
-│   │   │   ├── Room.tsx  ← updated (loading transition, UI entry)
+│   │   │   ├── Room.tsx
 │   │   │   ├── RoomEntry.tsx
 │   │   │   ├── ThemeToggle.tsx
 │   │   │   └── ui/
@@ -43,7 +43,7 @@ my-web-rtc/
 │   │   ├── main.tsx
 │   │   ├── utils/
 │   │   │   ├── types.ts
-│   │   │   └── useWebRTC.ts  ← updated (clientIdRef, self-target fix)
+│   │   │   └── useWebRTC.ts
 │   │   └── vite-env.d.ts
 │   ├── tsconfig.app.json
 │   ├── tsconfig.json
@@ -56,7 +56,7 @@ my-web-rtc/
 ├── package.json
 ├── pnpm-lock.yaml
 ├── pnpm-workspace.yaml
-├── README.md  ← updated (tests section, frontend notes)
+├── README.md
 ├── SECURITY.md
-├── test_api.py  ← updated (enter/exit room tests)
+├── test_api.py
 └── treemap

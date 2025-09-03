@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import type {
   WebSocketMessage,
   ChatMessage,
-  AppState,
   JoinRoomMessage,
   LeaveRoomMessage,
   SendWebRTCOfferMessage,
@@ -230,7 +229,7 @@ export function useWebRTC(localVideoRef: React.RefObject<HTMLVideoElement>): Use
             username,
           } as JoinRoomMessage);
         } else {
-          console.log('WebSocket not ready, retrying in 100ms...');
+          // console.log('WebSocket not ready, retrying in 100ms...');
           setTimeout(attemptJoin, 100);
         }
       };

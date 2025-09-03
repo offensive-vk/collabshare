@@ -13,7 +13,7 @@ interface RoomProps {
 const Room: React.FC<RoomProps> = ({ roomId, username: propUsername, testMode = false }) => {
   const location = useLocation();
   const username = propUsername || location.state?.username || '';
-  console.log('Room mounted', { roomId, username });
+  // console.log('Room mounted', { roomId, username });
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const [showChat, setShowChat] = useState(false);
   const [showConfirm, setShowConfirm] = useState<{ action: string, onConfirm: () => void } | null>(null);

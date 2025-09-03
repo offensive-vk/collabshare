@@ -56,9 +56,11 @@ CollabShare enables up to 5 participants per room to:
   - Participant limit enforcement and room cleanup
 
 - **Run tests**:
+
 ```bash
 python test_api.py
 ```
+
 Requires backend running at `http://localhost:8001`.
 
 ## 🧭 Frontend Flow Notes
@@ -115,7 +117,7 @@ git push origin feature/new-feature
 
 For technical support or questions:
 
-- Open a [issue](https://github.com/offensive-vk/my-web-rtc/issue/new) on our github page.
+- Open a [issue](https://github.com/offensive-vk/collabshare/issues) on our github page.
 - Check the troubleshooting section
 - Review application logs
 - Test API endpoints manually
