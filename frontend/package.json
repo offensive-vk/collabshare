@@ -4,10 +4,12 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --port 8111 -d",
-    "build": "tsc -b && vite build -d",
+    "dev": "vite --port 8111 --force -d",
+    "build": "tsc -b && vite build -d --sourcemap",
     "lint": "eslint .",
-    "preview": "vite preview --port 8111 -d"
+    "preview": "vite preview --port 8111 -d",
+    "optimize": "vite optimize -d",
+    "clean": "rm -rf dist"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",

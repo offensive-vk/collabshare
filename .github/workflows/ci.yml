@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    paths-ignore:
+      - "**/*.md"
+      - "**/*.svg"
+    branches:
+      - "master"
+  pull_request:
+    paths-ignore:
+      - "**/*.md"
+      - "**/*.svg"
+    branches:
+      - "master"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: ["20.x", "21.x", "22.x", "23.x", "24.x"]
+        
+    runs-on: ${{ matrix.os }}
+    name: Optimize & Build - v${{ matrix.node }} on ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js v${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Change Directory
+        run: cd frontend
+
+      - name: Install pnpm
+        run: npm i -g pnpm@10.15.0 && pnpm -v
+
+      - name: Install Dependencies
+        run: pnpm i
+
+      - name: Optimize & Build
+        run: pnpm run optimize && pnpm run build
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.os }}-v${{ matrix.node }}
+          path: dist
+
+      - name: Upload Successful Summary
+        if: success()
+        run: echo "# Build Succeeded on ${{ matrix.os }}-v${{ matrix.node }} ✅" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload Failure Summary
+        if: failure()
+        run: echo "# Build Failed on ${{ matrix.os }}-v${{ matrix.node }} ❌" >> $GITHUB_STEP_SUMMARY
