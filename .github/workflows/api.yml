@@ -1,0 +1,89 @@
+name: CI / API Test
+
+on:
+  schedule:
+    - cron: '0 0 */7 * *'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api-check:
+    runs-on: ubuntu-latest
+    name: Run backend (uvicorn) and test with test_api.py
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: Start backend server
+        run: |
+          nohup python -m uvicorn server:app --host 0.0.0.0 --port 8001 > backend_server.log 2>&1 &
+        working-directory: backend
+
+      - name: Wait for backend readiness
+        run: |
+          for i in {1..30}; do
+            if curl -fsS http://localhost:8001/api > /dev/null; then
+              echo "Backend is ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Backend did not become ready in time" >&2
+          echo "===== Backend Logs ====="
+          tail -n 200 backend/backend_server.log || true
+          exit 1
+
+      - name: Run API tests
+        id: run_tests
+        run: |
+          set -o pipefail
+          START_TS=$(date +%s)
+          python test_api.py 2>&1 | tee test_output.txt
+          EXIT_CODE=${PIPESTATUS[0]}
+          END_TS=$(date +%s)
+          DURATION=$((END_TS-START_TS))
+          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+          echo "duration=$DURATION" >> $GITHUB_OUTPUT
+          exit $EXIT_CODE
+
+      - name: Write summary
+        if: always()
+        env:
+          EXIT_CODE: ${{ steps.run_tests.outputs.exit_code }}
+          DURATION: ${{ steps.run_tests.outputs.duration }}
+        run: |
+          STATUS=$([ "${EXIT_CODE}" = "0" ] && echo "✅ Passed" || echo "❌ Failed")
+          echo "# API Test Result" >> $GITHUB_STEP_SUMMARY
+          echo "- Status: **${STATUS}**" >> $GITHUB_STEP_SUMMARY
+          echo "- Duration (s): **${DURATION:-n/a}**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Test Output (last 200 lines)" >> $GITHUB_STEP_SUMMARY
+          echo '```text' >> $GITHUB_STEP_SUMMARY
+          tail -n 200 test_output.txt >> $GITHUB_STEP_SUMMARY || true
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Dump backend logs on failure
+        if: failure()
+        run: |
+          echo "===== Backend Logs (last 200) ====="
+          tail -n 200 backend/backend_server.log || true
+
+      - name: Stop backend
+        if: always()
+        run: |
+          pkill -f "uvicorn server:app" || true

@@ -1,0 +1,104 @@
+name: CI / Docker Compose
+
+on:
+  push:
+    branches: [ "master" ]
+    paths-ignore: [ '**/*.md', '**/*.svg' ]
+  pull_request:
+    branches: [ "**" ]
+    paths-ignore: [ '**/*.md', '**/*.svg' ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compose-test:
+    runs-on: ubuntu-latest
+    name: Build and Test Docker Compose Stack
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Show Docker info
+        run: |
+          docker --version
+          docker compose version || true
+
+      - name: Build and start services
+        run: |
+          docker compose -f compose.yaml up -d --build
+          docker compose -f compose.yaml ps
+
+      - name: Wait for backend health
+        run: |
+          echo "Waiting for backend healthcheck..."
+          for i in {1..30}; do
+            if curl -fsS http://localhost:8001/api > /dev/null; then
+              echo "Backend healthy"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Backend did not become healthy in time" >&2
+          exit 1
+
+      - name: Run smoke tests
+        id: smoketests
+        run: |
+          set -e
+          BACKEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8001/api)
+          BACKEND_BODY=$(curl -s http://localhost:8001/api || true)
+
+          FRONTEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8111/)
+          FRONTEND_BYTES=$(curl -s http://localhost:8111/ | wc -c | tr -d ' ') 
+
+          echo "backend_status=$BACKEND_STATUS" >> $GITHUB_OUTPUT
+          echo "backend_body<<EOF" >> $GITHUB_OUTPUT
+          echo "$BACKEND_BODY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          echo "frontend_status=$FRONTEND_STATUS" >> $GITHUB_OUTPUT
+          echo "frontend_bytes=$FRONTEND_BYTES" >> $GITHUB_OUTPUT
+
+      - name: Write summary
+        if: always()
+        env:
+          BACKEND_STATUS: ${{ steps.smoketests.outputs.backend_status }}
+          BACKEND_BODY: ${{ steps.smoketests.outputs.backend_body }}
+          FRONTEND_STATUS: ${{ steps.smoketests.outputs.frontend_status }}
+          FRONTEND_BYTES: ${{ steps.smoketests.outputs.frontend_bytes }}
+        run: |
+          echo "# Docker Compose Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- Backend HTTP status: **${BACKEND_STATUS:-n/a}**" >> $GITHUB_STEP_SUMMARY
+          echo "- Frontend HTTP status: **${FRONTEND_STATUS:-n/a}**" >> $GITHUB_STEP_SUMMARY
+          echo "- Frontend bytes received: **${FRONTEND_BYTES:-0}**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Backend /api response (truncated)" >> $GITHUB_STEP_SUMMARY
+          echo '\`\`\`json' >> $GITHUB_STEP_SUMMARY
+          echo "${BACKEND_BODY:-{}}" | head -c 2000 >> $GITHUB_STEP_SUMMARY
+          echo '' >> $GITHUB_STEP_SUMMARY
+          echo '\`\`\`' >> $GITHUB_STEP_SUMMARY
+
+      - name: Dump logs on failure
+        if: failure()
+        run: |
+          docker compose -f compose.yaml ps
+          docker compose -f compose.yaml logs --no-color --tail=200 || true
+
+      - name: Upload logs artifact
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compose-logs
+          path: |
+            ./
+          if-no-files-found: ignore
+
+      - name: Tear down
+        if: always()
+        run: |
+          docker compose -f compose.yaml down -v
