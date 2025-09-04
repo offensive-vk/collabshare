@@ -38,17 +38,16 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
-      - name: Change Directory
-        run: cd frontend
-
-      - name: Install pnpm
-        run: npm i -g pnpm@10.15.0 && pnpm -v
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
 
       - name: Install Dependencies
-        run: pnpm i
+        run: pnpm run setup-deps
 
       - name: Optimize & Build
-        run: pnpm run optimize && pnpm run build
+        run: pnpm optimize && pnpm build
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4

@@ -10,6 +10,8 @@
     "dev:server": "cd backend && python server.py",
     "dev": "concurrently \"pnpm:dev:*\"",
     "test": "python test_api.py",
+    "build": "cd frontend && pnpm build",
+    "optimize": "cd frontend && pnpm optimize",
     "setup-deps": "pnpm install --dir frontend && pip install -r backend/requirements.txt"
   },
   "devDependencies": {
