@@ -44,7 +44,7 @@ jobs:
           version: 10.15.0
 
       - name: Install frontend dependencies
-        run: pnpm install --dir frontend --force
+        run: pnpm install --force
         working-directory: frontend
 
       - name: Optimize & Build
