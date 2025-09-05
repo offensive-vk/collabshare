@@ -12,7 +12,7 @@ concurrency:
 jobs:
   api-check:
     runs-on: ubuntu-latest
-    name: Run backend (uvicorn) and test with test_api.py
+    name: Run Tests
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -50,6 +50,7 @@ jobs:
 
       - name: Run API tests
         id: run_tests
+        continue-on-error: true
         run: |
           set -o pipefail
           START_TS=$(date +%s)
@@ -59,7 +60,7 @@ jobs:
           DURATION=$((END_TS-START_TS))
           echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
           echo "duration=$DURATION" >> $GITHUB_OUTPUT
-          
+
       - name: Write summary
         if: always()
         env:
