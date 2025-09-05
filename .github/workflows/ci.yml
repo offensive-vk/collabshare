@@ -43,17 +43,19 @@ jobs:
         with:
           version: 10.15.0
 
-      - name: Install Dependencies
-        run: pnpm run setup-deps
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: frontend
 
       - name: Optimize & Build
         run: pnpm optimize && pnpm build
+        working-directory: frontend
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: build-${{ matrix.os }}-v${{ matrix.node }}
-          path: dist
+          path: frontend/dist
 
       - name: Upload Successful Summary
         if: success()

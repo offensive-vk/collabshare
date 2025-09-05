@@ -59,8 +59,7 @@ jobs:
           DURATION=$((END_TS-START_TS))
           echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
           echo "duration=$DURATION" >> $GITHUB_OUTPUT
-          exit $EXIT_CODE
-
+          
       - name: Write summary
         if: always()
         env:

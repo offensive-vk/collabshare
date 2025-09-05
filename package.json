@@ -12,7 +12,7 @@
     "test": "python test_api.py",
     "build": "cd frontend && pnpm build",
     "optimize": "cd frontend && pnpm optimize",
-    "setup-deps": "pnpm install --dir frontend && pip install -r backend/requirements.txt"
+    "setup-deps": "pnpm install -f --dir frontend && pip install -r backend/requirements.txt"
   },
   "devDependencies": {
     "concurrently": "^9.2.0"

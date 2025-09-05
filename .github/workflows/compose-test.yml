@@ -16,7 +16,7 @@ concurrency:
 jobs:
   compose-test:
     runs-on: ubuntu-latest
-    name: Build and Test Docker Compose Stack
+    name: Build and Test Docker Compose
     steps:
       - name: Checkout
         uses: actions/checkout@v4

@@ -1,3 +1,2 @@
-my-web-rtc:
-  - 'frontend/*'
-  - 'backend/*'
+packages:
+  - 'frontend'
